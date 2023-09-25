@@ -20,9 +20,11 @@ const userSchema = new Schema({
       "Please fill a valid email address",
     ],
   },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false }, // select false le query garne bela password column hide gardincha
+  roles: { type: Array, default: ["user"], required: true },
   isActive: { type: Boolean, default: true, required: true },
+  isEmailVerified: { type: Boolean, default: false },
   ...commonSchema,
 });
 
-module.exports= model("User", userSchema);
+module.exports = model("User", userSchema);

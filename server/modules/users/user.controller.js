@@ -1,23 +1,28 @@
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
 const Model = require("./user.model");
 
 const create = async (payload) => {
   const { password, ...rest } = payload;
-  rest.password = await bcrypt.hash(password, saltRounds);
-
-  return Model.create(rest);
+  rest.password = await bcrypt.hash(password, +process.env.SALTS_ROUND);
+  return Model.create(payload);
 };
 
-const login = async (email, password) => {
-  const userExists = await Model.findOne({ email }); // userExists gives tyo email vako user ko password
-  if (!userExists) throw new Error("User not found ...");
-
-  const result = await bcrypt.compare(password, userExists?.password);
-
-  if (!result) throw new Error("Email or password is invalid");
-
-  return result;
+const getById = (id) => {
+  return Model.findOne({ _id: id });
 };
 
-module.exports = { create, login };
+const list = () => {
+  return Model.find();
+};
+
+const updateById = (id, payload) => {
+  return Model.findByIdAndUpdate(id, payload, { new: true });
+};
+
+const changeActive = (id, payload) => {
+  const { isActive } = payload;
+  if (isActive)
+    return Model.findByIdAndUpdate(id, { isActive: false }, { new: true });
+  else return Model.findByIdAndUpdate(id, { isActive: true }, { new: true });
+};
+
+module.exports = { create, getById, list, updateById, changeActive };
