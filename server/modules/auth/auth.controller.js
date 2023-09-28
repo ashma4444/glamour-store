@@ -84,7 +84,7 @@ const regenerateToken = async (email) => {
 };
 
 const generateFPToken = async (email) => {
-  const user = userModel.findOne({ email });
+  const user = await userModel.findOne({ email });
   if (!user) throw new Error("User does not exists");
 
   const otp = await generateOtp();
