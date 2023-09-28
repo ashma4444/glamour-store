@@ -5,7 +5,10 @@ const secureAPI = require("../../utils/secure");
 // role anusar yo route access garna paune
 router.get("/", secureAPI(["admin"]), async (req, res, next) => {
   try {
-    const result = await Controller.list();
+    // const result = await Controller.list();
+    const { size, offset, name, role } = req.query;
+    const search = { name, role };
+    const result = await Controller.list(size, offset, search);
     res.json({ data: result, message: "Success" });
   } catch (e) {
     next(e);

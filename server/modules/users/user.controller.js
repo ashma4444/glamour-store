@@ -11,8 +11,67 @@ const getById = (id) => {
   return Model.findOne({ _id: id });
 };
 
-const list = () => {
-  return Model.find();
+const list = async (size, offset, search) => {
+  const pageNum = parseInt(offset) || 1;
+  const limit = parseInt(size) || 5;
+  const query = [];
+  // return Model.find(query).skip((pageNum-1)*limit).limit(limit);
+  // Filters
+  if (search?.name) {
+    query.push({
+      $match: { name: new RegExp(search?.name, "gi") },
+    });
+  }
+  if (search?.role) {
+    query.push({
+      $match: { roles: [search?.role] },
+    });
+  }
+
+  query.push(
+    {
+      $sort: {
+        created_at: -1,
+      },
+    },
+    {
+      $facet: {
+        metadata: [
+          {
+            $count: "total",
+          },
+        ],
+        data: [
+          {
+            $skip: (pageNum - 1) * limit,
+          },
+          {
+            $limit: limit,
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        total: {
+          $arrayElemAt: ["$metadata.total", 0],
+        },
+      },
+    },
+    {
+      $project: {
+        data: 1,
+        total: 1,
+      },
+    },
+    {
+      $project: {
+        "data.password": 0,
+      },
+    }
+  );
+  const result = await Model.aggregate(query).allowDiskUse(true);
+  return { result: result[0].data, total: result[0].total, pageNum, limit };
 };
 
 const updateById = (id, payload) => {
