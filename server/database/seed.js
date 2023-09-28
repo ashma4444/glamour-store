@@ -23,7 +23,7 @@ const setup = {
     // creating normal user
     const userPayload = {
       name: "Ashma User",
-      email: "ashma20570218@gmail.com",
+      email: "ashma@gmail.com",
       password: "12345",
       isEmailVerified: true,
     };

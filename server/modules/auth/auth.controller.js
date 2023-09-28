@@ -21,7 +21,9 @@ const create = async (payload) => {
 };
 
 const login = async (email, password) => {
-  const user = await userModel.findOne({ email }).select("+password"); // user gives tyo email vako user ko object
+  const user = await userModel
+    .findOne({ email, isArchived: false })
+    .select("+password"); // user gives tyo email vako user ko object
   if (!user) throw new Error("User not found ...");
 
   //   check if email exists or is verified
@@ -31,6 +33,8 @@ const login = async (email, password) => {
   if (!user.isActive) throw new Error("User account status is inactive");
 
   const result = await bcrypt.compare(password, user?.password);
+
+  console.log(result);
 
   if (!result) throw new Error("Email or password is invalid");
 
@@ -45,9 +49,9 @@ const login = async (email, password) => {
 const verifyEmail = async (email, token) => {
   const user = await authModel.findOne({ email }); // user gives tyo email vako user ko object
   const userStatus = await userModel.findOne({ email }); // user gives tyo email vako user ko object
-  if (!user || !userStatus) throw new Error("User does not exists");
+  if (!userStatus) throw new Error("User does not exists");
 
-  if (userStatus?.isEmailVerified) throw new Error("User is already verified");
+  if (userStatus.isEmailVerified) throw new Error("User is already verified");
 
   const isValidOtp = checkOtp(token);
   if (!isValidOtp) throw new Error("OPT token expired");
@@ -60,12 +64,15 @@ const verifyEmail = async (email, token) => {
     { new: true }
   );
 
+  await authModel.deleteOne({ email });
+
   return true;
 };
 
 const regenerateToken = async (email) => {
   const user = await authModel.findOne({ email });
-  if (!user) throw new Error("User does not exists");
+
+  if (!user) throw new Error("User already verified");
 
   const otp = await generateOtp();
   await authModel.findOneAndUpdate({ email }, { token: +otp });
@@ -76,4 +83,44 @@ const regenerateToken = async (email) => {
   return true;
 };
 
-module.exports = { create, login, regenerateToken, verifyEmail };
+const generateFPToken = async (email) => {
+  const user = userModel.findOne({ email });
+  if (!user) throw new Error("User does not exists");
+
+  const otp = await generateOtp();
+  await authModel.create({ email: user?.email, token: +otp });
+
+  //   send otp mail
+  const mail = await sendMail(user?.email, otp);
+
+  return mail;
+};
+
+const forgotPassword = async (email, token, password) => {
+  const user = await authModel.findOne({ email }); // user gives tyo email vako user ko object
+  if (!user) throw new Error("User does not exists");
+
+  const isValidOtp = checkOtp(token);
+  if (!isValidOtp) throw new Error("OPT token expired");
+
+  if (!(+token === user?.token)) throw new Error("Token mismatched");
+
+  await userModel.findOneAndUpdate(
+    { email },
+    { password: await bcrypt.hash(password, +process.env.SALTS_ROUND) },
+    { new: true }
+  );
+
+  await authModel.deleteOne({ email });
+
+  return true;
+};
+
+module.exports = {
+  create,
+  forgotPassword,
+  generateFPToken,
+  login,
+  regenerateToken,
+  verifyEmail,
+};

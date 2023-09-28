@@ -50,4 +50,18 @@ router.post("/regenerate", async (req, res, next) => {
   }
 });
 
+router.put("/forgot-password", async (req, res, next) => {
+  try {
+    const { email, password, token } = req.body; // controller bata email , password nikaleko
+    if (!email || !password || !token)
+      throw new Error("Email, token or password is missing");
+
+    const result = await Controller.forgotPassword(email, token, password);
+
+    res.json({ data: result, message: "Success" });
+  } catch (e) {
+    next(e);
+  }
+});
+
 module.exports = router;

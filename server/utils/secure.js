@@ -26,6 +26,7 @@ const secureAPI = (roles) => {
 
       const { roles: userRoles, _id } = user;
       req.currentUser = _id;
+      req.currentRoles = userRoles;
 
       // user role check
       const isAllowed = compareRoles(roles ?? [], userRoles);
