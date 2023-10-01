@@ -130,6 +130,8 @@ dist
 .pnp.*
 
 # my git-ignore
+server/public/users
+server/public/products
 
 # to test codes/packages
 playground/

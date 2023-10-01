@@ -1,6 +1,23 @@
+const multer = require("multer");
 const router = require("express").Router();
 const Controller = require("./user.controller");
 const secureAPI = require("../../utils/secure");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    try {
+      cb(null, "./public/users");
+    } catch (e) {}
+  },
+  filename: function (req, file, cb) {
+    try {
+      const uniqueSuffix = Date.now() + file.originalname.split(" ").join("");
+      cb(null, file.fieldname + "-" + uniqueSuffix);
+    } catch (e) {}
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // role anusar yo route access garna paune
 router.get("/", secureAPI(["admin"]), async (req, res, next) => {
@@ -39,8 +56,12 @@ router.get("/profile", secureAPI(["user", "admin"]), async (req, res, next) => {
 router.put(
   "/update-profile",
   secureAPI(["user", "admin"]),
+  upload.single("image"),
   async (req, res, next) => {
     try {
+      if (req?.file) {
+        req.body.image = "users/".concat(req?.file.filename);
+      }
       const me = req.currentRoles.includes("admin")
         ? req.body.id
         : req.currentUser;

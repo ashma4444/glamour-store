@@ -24,6 +24,7 @@ const userSchema = new Schema({
   roles: { type: Array, default: ["user"], required: true },
   isActive: { type: Boolean, default: true, required: true },
   isEmailVerified: { type: Boolean, default: false },
+  image: { type: String },
   ...commonSchema,
 });
 
