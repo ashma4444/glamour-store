@@ -11,9 +11,9 @@ const getById = (id) => {
   return Model.findOne({ _id: id });
 };
 
-const list = async (size, offset, search) => {
+const list = async (limit, offset, search) => {
   const pageNum = parseInt(offset) || 1;
-  const limit = parseInt(size) || 5;
+  const size = parseInt(limit) || 5;
   const query = [];
   // return Model.find(query).skip((pageNum-1)*limit).limit(limit);
   // Filters
@@ -43,10 +43,10 @@ const list = async (size, offset, search) => {
         ],
         data: [
           {
-            $skip: (pageNum - 1) * limit,
+            $skip: (pageNum - 1) * size,
           },
           {
-            $limit: limit,
+            $limit: size,
           },
         ],
       },

@@ -23,9 +23,9 @@ const upload = multer({ storage: storage });
 router.get("/", secureAPI(["admin"]), async (req, res, next) => {
   try {
     // const result = await Controller.list();
-    const { size, offset, name, role } = req.query;
+    const { limit, page, name, role } = req.query;
     const search = { name, role };
-    const result = await Controller.list(size, offset, search);
+    const result = await Controller.list(limit, page, search);
     res.json({ data: result, message: "Success" });
   } catch (e) {
     next(e);
