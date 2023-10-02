@@ -1,6 +1,8 @@
 const Model = require("./product.model");
 
 const create = async (payload) => {
+  // to do- validation check
+  // if failed, fs.unlink() to delete the photos
   return await Model.create(payload);
 };
 
@@ -16,6 +18,9 @@ const list = async (limit, page, search) => {
   }
 
   query.push(
+    {
+      $match: { isArchived: search?.isArchived || false },
+    },
     {
       $sort: {
         created_at: -1,
@@ -50,15 +55,15 @@ const list = async (limit, page, search) => {
         data: 1,
         total: 1,
       },
-    },
-    {
-      $project: {
-        "data.password": 0,
-      },
     }
   );
   const result = await Model.aggregate(query).allowDiskUse(true);
-  return { result: result[0].data, total: result[0].total, pageNum, limit };
+  return {
+    result: result[0].data,
+    total: result[0].total || 0,
+    page: pageNum,
+    limit,
+  };
 };
 
 const getById = async (id) => {

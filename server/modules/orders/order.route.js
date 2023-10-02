@@ -1,22 +1,22 @@
 const router = require("express").Router();
 
-const Controller = require("./category.controller");
+const Controller = require("./order.controller");
 const secureAPI = require("../../utils/secure");
 
 // role anusar yo route access garna paune
-router.get("/", async (req, res, next) => {
+router.get("/", secureAPI(["admin"]), async (req, res, next) => {
   try {
     // const result = await Controller.list();
-    const { size, offset, name } = req.query;
-    const search = { name };
-    const result = await Controller.list(size, offset, search);
+    const { limit, page, id } = req.query;
+    const search = { id };
+    const result = await Controller.list(limit, page, search);
     res.json({ data: result, message: "Success" });
   } catch (e) {
     next(e);
   }
 });
 
-router.post("/", secureAPI(["admin"]), async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     req.body.created_by = req.currentUser;
     const result = await Controller.create(req.body);
@@ -26,7 +26,7 @@ router.post("/", secureAPI(["admin"]), async (req, res, next) => {
   }
 });
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
     const result = await Controller.getById(req.params.id);
     res.json({ data: result, message: "Success" });
@@ -38,6 +38,7 @@ router.get("/:id", async (req, res, next) => {
 router.put("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
     req.body.updated_by = req.currentUser;
+    req.body.updated_at = new Date();
     const result = await Controller.updateById(req.params.id, req.body);
     res.json({ data: result, message: "Success" });
   } catch (e) {
@@ -47,7 +48,22 @@ router.put("/:id", secureAPI(["admin"]), async (req, res, next) => {
 
 router.delete("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
-    const result = await Controller.removeById(req.params.id);
+    const payload = { updated_at: new Date(), updated_by: req.currentUser };
+    const result = await Controller.removeById(req.params.id, payload);
+    res.json({ data: result, message: "Success" });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.patch("/:id", secureAPI(["admin"]), async (req, res, next) => {
+  try {
+    const payload = {
+      status: req.body?.status,
+      updated_at: new Date(),
+      updated_by: req.currentUser,
+    };
+    const result = await Controller.approve(req.params.id, payload);
     res.json({ data: result, message: "Success" });
   } catch (e) {
     next(e);

@@ -4,7 +4,7 @@ const productModel = require("../products/product.model");
 
 const create = async (payload) => {
   // create slug
-  payload.slug = slugify(payload.name);
+  payload.slug = slugify(payload.name, { lower: true });
   return await Model.create(payload);
 };
 
@@ -54,15 +54,15 @@ const list = async (limit, page, search) => {
         data: 1,
         total: 1,
       },
-    },
-    {
-      $project: {
-        "data.password": 0,
-      },
     }
   );
   const result = await Model.aggregate(query).allowDiskUse(true);
-  return { result: result[0].data, total: result[0].total, pageNum, limit };
+  return {
+    result: result[0].data,
+    total: result[0].total || 0,
+    page: pageNum,
+    limit,
+  };
 };
 
 const getById = async (id) => {
@@ -77,10 +77,13 @@ const updateById = async (id, payload) => {
 };
 
 const removeById = async (id) => {
-  const product = await productModel.findOne({ category: id });
+  const product = await productModel.findOne({
+    category: id,
+    isArchived: false,
+  });
   if (product)
     throw new Error(
-      `Remove category from product names ${product.name} to continue`
+      `Remove category from product named ${product.name} to continue`
     );
   return await Model.deleteOne({ _id: id });
 };

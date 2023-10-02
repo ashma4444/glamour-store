@@ -21,12 +21,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // role anusar yo route access garna paune
-router.get("/", secureAPI([]), async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     // const result = await Controller.list();
-    const { size, offset, name, role } = req.query;
-    const search = { name, role };
-    const result = await Controller.list(size, offset, search);
+    const { limit, page, name, isArchived } = req.query;
+    const search = { name, isArchived };
+    const result = await Controller.list(limit, page, search);
     res.json({ data: result, message: "Success" });
   } catch (e) {
     next(e);
@@ -39,7 +39,7 @@ router.post(
   upload.array("images", 4),
   async (req, res, next) => {
     try {
-      if (req.files) {
+      if (req.files.length > 0) {
         req.body.images = [];
         req.files.map((file) => {
           req.body.images.push("products/".concat(file.filename));
@@ -53,7 +53,7 @@ router.post(
   }
 );
 
-router.get("/:id", secureAPI([]), async (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
   try {
     const result = await Controller.getById(req.params.id);
     res.json({ data: result, message: "Success" });
@@ -68,7 +68,7 @@ router.put(
   upload.array("images", 4),
   async (req, res, next) => {
     try {
-      if (req?.files) {
+      if (req?.files.length > 0) {
         req.body.images = [];
         req.files.map((file) => {
           req.body.images.push("products/".concat(file.filename));
@@ -86,6 +86,7 @@ router.put(
 router.delete("/:id", secureAPI(["admin"]), async (req, res, next) => {
   try {
     req.body.updated_by = req.currentUser;
+    req.body.updated_at = new Date();
     const result = await Controller.removeById(req.params.id, req.body);
     res.json({ data: result, message: "Success" });
   } catch (e) {

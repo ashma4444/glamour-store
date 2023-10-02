@@ -8,7 +8,7 @@ const productSchema = new Schema({
   quantity: { type: Number, max: 1000, min: 1 },
   price: { type: Number, min: 1, max: 1000000 },
   description: { type: String, maxLength: 500 },
-  images: [{ type: Array }],
+  images: [{ type: String }],
   category: { type: ObjectId, ref: "Category" },
   ...commonSchema,
 });
